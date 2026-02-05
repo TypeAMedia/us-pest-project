@@ -26,14 +26,19 @@
 
 @font-face {
   font-family: 'Open Sans Condensed';
-  src: url(./fonts/OpenSans_Condensed-Bold.ttf);
+  src: url(./fonts/OpenSans_Condensed-Regular.ttf);
+}
+
+@font-face {
+  font-family: 'Open Sans Condensed bold';
+  src: url(./fonts/OpenSans_Condensed-Medium.ttf);
 }
 
 
 
 html,
 body {
-  font-family: "Open Sans", sans-serif;
+  font-family: "Open Sans Condensed", sans-serif;
 }
 
 
@@ -122,7 +127,7 @@ body {
 
 .container {
   padding: 0px;
-  max-width: 918px;
+  max-width: 818px;
 }
 
 .left-column {
@@ -284,7 +289,7 @@ header .titles {
 }
 
 .search-value {
-  font-family: "Open Sans";
+  font-family: "Open Sans Condensed";
   font-size: 20px;
   font-weight: 600;
   line-height: 26px;
@@ -293,7 +298,7 @@ header .titles {
 }
 
 .search-text {
-  font-family: "Open Sans";
+  font-family: "Open Sans Condensed";
   font-size: 12px;
   font-weight: 600;
   text-align: left;
@@ -369,7 +374,7 @@ header .titles {
   display: flex;
   align-items: center;
   height: 35px;
-  font-family: "Open Sans", sans-serif;
+  font-family: "Open Sans Condensed", sans-serif;
   border-bottom: 0.5px solid #C4C4C4;
   width: 100%;
   padding: 0px 6px;
@@ -377,15 +382,16 @@ header .titles {
 }
 
 .table-body-row {
-  font-family: "Open Sans";
+  font-family: "Open Sans Condensed";
   font-size: 16px;
   font-weight: 600;
   text-align: left;
   color: #051C34
 }
 
-.table-body-row td {
-  font-family: "Open Sans" sans-serif;
+.table-body-row td:nth-child(1) {
+  font-family: "Open Sans Condensed" sans-serif;
+
 }
 
 .table-icon {
@@ -394,22 +400,20 @@ header .titles {
 }
 
 .table-cell {
-  font-family: "Open Sans", sans-serif;
+  font-family: "Open Sans Condensed", sans-serif;
   text-transform: uppercase
 }
 
 .header-box {
-  font-family: 'Open Sans', sans-serif;
+  font-family: 'Open Sans Condensed bold', sans-serif;
   font-size: 16px;
-  font-weight: 700;
+  font-weight: 700  !important;
   line-height: 16px;
   text-align: left;
 }
 
 .header-label {
   margin-top: 7px;
-  font-family: 'Open Sans';
-  font-size: 13px;
   font-weight: 700;
   text-align: left;
   color: #fff
@@ -417,7 +421,7 @@ header .titles {
 
 .table-label {
   margin-top: 2px;
-  font-family: "Open Sans", sans-serif;
+  font-family: "Open Sans Condensed", sans-serif;
   font-size: 16px;
   font-weight: 700;
   line-height: 40px;
@@ -448,23 +452,20 @@ tr td:first-child {
 }
 
 .table-content {
-  font-family: "Open Sans", sans-serif;
+  font-family: "Open Sans Condensed", sans-serif;
   overflow-x: auto;
 }
 
 .table-body-row:nth-child(2n + 1) {
   background-color: var(--light-grey)
 }
-
 /* End of Table */
-
-
 
 
 @media (min-width: 576px) {
   .container {
     padding: 0px;
-    max-width: 918px;
+    max-width: 818px;
 
     /* border: 1px solid #012C57; */
   }
@@ -490,7 +491,7 @@ tr td:first-child {
   }
 
   .table-content {
-    font-family: "Open Sans", sans-serif;
+    font-family: "Open Sans Condensed", sans-serif;
     max-width: 100%
   }
 

@@ -1,6 +1,5 @@
 function App() {
-  let showMore = true;
-
+  let showMore = true
   loadData().then(({ data }) => {
     let tableData = []
     const headers = [
@@ -57,26 +56,28 @@ function App() {
     drawTable(headers, data.filter((d, i) => i <= 9))
 
 
-    addEvents();
-  });
+    addEvents()
+  })
 
   function loadData() {
     return Promise.all([
       d3.csv('./data/alldata-new.csv', d3.autoType)
     ]).then(([data]) => {
       return { data }
-    });
+    })
   }
 
   function addEvents() {
     d3.select(window).on("resize", () => {
-      overallMap.resize();
-      stateMap.resize();
-    });
+      overallMap.resize()
+      stateMap.resize()
+    })
   }
 
 
   function drawTable(headers, data) {
+
+
     const table = d3.select('#table')
 
     const tableHeader = table
@@ -85,7 +86,7 @@ function App() {
       .join('tr')
       .attr('class', 'table-header-row')
 
-    const tableHeaderCells = tableHeader.selectAll('th')
+    tableHeader.selectAll('th')
       .data(headers)
       .join('th')
       .style('width', (d) => d.width)
@@ -101,17 +102,28 @@ function App() {
       .join('tr')
       .attr('class', 'table-body-row')
 
-    const tableCells = tableRows
+    tableRows
       .selectAll('td')
       .data((d) => {
         return headers.map((header) => d[header.fieldValue])
       })
       .join('td')
       .text((d, index) => {
-        return index === 3 ? d : ordinal_suffix_of(d)
+        return index === 3 || index === 1 ? d : ordinal_suffix_of(d)
+      })
+
+    const colors = ['#E02127', '#CE2531', '#BB2A3C', '#A92E46', '#963250', '#84375B', '#713B65', '#5F3F6F', '#4D447A', '#3A4884', '#284C8E', '#155199', '#0355A3',]
+
+
+    d3.selectAll('.table-body-row td:nth-child(1)')
+      .style('border-left', function () {
+        const rowData = d3.select(this.parentNode).datum()
+        return `5px ${colors[rowData['OVERALL RANK']]} solid`
       })
   }
 
+
+
 }
 
-window.addEventListener("DOMContentLoaded", App);
+window.addEventListener("DOMContentLoaded", App)
