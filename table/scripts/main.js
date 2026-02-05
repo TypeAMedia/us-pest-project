@@ -25,13 +25,13 @@ function App() {
         label: 'Peak',
         icon: './images/iconss/peakMonth.svg',
         fieldValue: 'MOST SEARCHED MONTH',
-        width: "20%",
+        width: "15%",
       },
       {
         label: 'Rain',
         icon: './images/iconss/rainfall.svg',
         fieldValue: 'RANK FOR PRECIPITATION',
-        width: "10%",
+        width: "15%",
       },
       {
         label: 'Sun',
