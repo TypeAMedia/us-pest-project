@@ -62,7 +62,6 @@ function App() {
 
 
     const topTenStates = stateData.sort((a, b) => a['STATE-RANK'] - b['STATE-RANK'])
-    console.log(topTenStates)
 
     const headers = [
       {
@@ -252,10 +251,7 @@ function App() {
   }
 
   function drawTable(headers, data, title, width) {
-
-
     d3.select('.table-box').style('width', window.innerWidth < 576 ? '100%' : width)
-
     d3.select('.table-title').html(title)
     const table = d3.select('#table')
 
@@ -265,12 +261,11 @@ function App() {
       .join('tr')
       .attr('class', 'table-header-row')
 
-
-    const tableHeaderCells = tableHeader.selectAll('th')
+    tableHeader.selectAll('th')
       .data(headers)
       .join('th')
       .style('width', (d) => d.width)
-      .html((d) => `<div class='header-box'> 
+      .html((d) => `<div class='header-box ${d.label.toLowerCase()}'> 
 			  <img src= ${d.icon} class='table-icon' />
 				<div class='header-label'> ${d.label} </div>
 			</div>`)

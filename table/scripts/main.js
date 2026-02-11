@@ -76,9 +76,13 @@ function App() {
 
 
   function drawTable(headers, data) {
-
-
     const table = d3.select('#table')
+
+    // Copy of data we can resort without mutating original
+    let currentData = data.slice()
+
+    // Track sort direction per column (true = ascending, false = descending)
+    const sortDirections = {}
 
     const tableHeader = table
       .selectAll('.table-header-row')
@@ -86,40 +90,74 @@ function App() {
       .join('tr')
       .attr('class', 'table-header-row')
 
-    tableHeader.selectAll('th')
+    const headerCells = tableHeader.selectAll('th')
       .data(headers)
       .join('th')
       .style('width', (d) => d.width)
       .html((d) => `<div class='header-box'> 
 			  <img src= ${d.icon} class='table-icon' />
-				<div class=
-        'header-label'> ${d.label} </div>
+				<div class='header-label'> ${d.label} </div>
 			</div>`)
 
-    const tableRows = table
-      .selectAll('.table-body-row')
-      .data(data)
-      .join('tr')
-      .attr('class', 'table-body-row')
+    const colors = ['#E02127', '#CE2531', '#BB2A3C', '#A92E46', '#963250', '#84375B', '#713B65', '#5F3F6F', '#4D447A', '#3A4884', '#284C8E', '#155199', '#0355A3']
 
-    tableRows
-      .selectAll('td')
-      .data((d) => {
-        return headers.map((header) => d[header.fieldValue])
+    function renderBody() {
+      const tableRows = table
+        .selectAll('.table-body-row')
+        .data(currentData)
+        .join('tr')
+        .attr('class', 'table-body-row')
+
+      tableRows
+        .selectAll('td')
+        .data((d) => {
+          return headers.map((header) => d[header.fieldValue])
+        })
+        .join('td')
+        .text((d, index) => {
+          // Keep month and state as plain text, others as ordinal ranks
+          return index === 3 || index === 1 ? d : ordinal_suffix_of(d)
+        })
+
+      // Color for the first column after each render
+      table.selectAll('.table-body-row td:nth-child(1)')
+        .style('border-left', function () {
+          const rowData = d3.select(this.parentNode).datum()
+          return `5px ${colors[rowData['OVERALL RANK']]} solid`
+        })
+    }
+
+    // Initial render
+    renderBody()
+
+    // Click on headers to sort by that column
+    headerCells.on('click', (_, header) => {
+      const field = header.fieldValue
+      if (field === 'STATE' || field === 'CITY') return
+      const isAsc = sortDirections[field] === true
+
+      currentData = currentData.slice().sort((a, b) => {
+        const va = a[field]
+        const vb = b[field]
+
+        if (va == null && vb == null) return 0
+        if (va == null) return 1
+        if (vb == null) return -1
+
+        let comparison
+        if (typeof va === 'number' && typeof vb === 'number') {
+          comparison = va - vb
+        } else {
+          comparison = String(va).localeCompare(String(vb))
+        }
+
+        // Toggle direction on each click
+        return isAsc ? -comparison : comparison
       })
-      .join('td')
-      .text((d, index) => {
-        return index === 3 || index === 1 ? d : ordinal_suffix_of(d)
-      })
 
-    const colors = ['#E02127', '#CE2531', '#BB2A3C', '#A92E46', '#963250', '#84375B', '#713B65', '#5F3F6F', '#4D447A', '#3A4884', '#284C8E', '#155199', '#0355A3',]
-
-
-    d3.selectAll('.table-body-row td:nth-child(1)')
-      .style('border-left', function () {
-        const rowData = d3.select(this.parentNode).datum()
-        return `5px ${colors[rowData['OVERALL RANK']]} solid`
-      })
+      sortDirections[field] = !isAsc
+      renderBody()
+    })
   }
 
 
