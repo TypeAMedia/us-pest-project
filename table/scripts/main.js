@@ -10,7 +10,7 @@ function App() {
         width: "10%",
       },
       {
-        label: 'State',
+        label: 'City',
         icon: './images/iconss/state.svg',
         fieldValue: 'CITY',
         width: "25%",
@@ -116,7 +116,10 @@ function App() {
         .join('td')
         .text((d, index) => {
           // Keep month and state as plain text, others as ordinal ranks
-          return index === 3 || index === 1 ? d : ordinal_suffix_of(d)
+          return (
+
+            index === 3 || index === 1 ?  d : ordinal_suffix_of(d)
+          )
         })
 
       // Color for the first column after each render
@@ -133,7 +136,7 @@ function App() {
     // Click on headers to sort by that column
     headerCells.on('click', (_, header) => {
       const field = header.fieldValue
-      if (field === 'STATE' || field === 'CITY') return
+      if (field === 'CITY' || field === 'MOST SEARCHED MONTH') return
       const isAsc = sortDirections[field] === true
 
       currentData = currentData.slice().sort((a, b) => {
