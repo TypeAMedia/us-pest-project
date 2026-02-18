@@ -302,6 +302,9 @@ function App() {
         },
         onStateClick: (stateName) => {
           drawCitiesTable(stateName)
+        },
+        onReset: () => {
+          drawTable(headers, topTenStates, 'Top ranking States for pest infestation', '798px')
         }
       }).render()
 

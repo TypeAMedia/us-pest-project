@@ -32,6 +32,7 @@ function USMap(params) {
       onStateMouseOver: () => { },
       onStateMouseOut: () => { },
       onStateClick: () => { },
+      onReset: () => { },
       tooltipContent: () => { },
       cityTooltipContent: () => { },
     },
@@ -620,6 +621,8 @@ function USMap(params) {
     circlesShown = false;
     currentSelected = null;
     highlight(null);
+    // Call reset callback to update table
+    attrs.onReset();
   }
 
   function scaleOnly(scale) {
