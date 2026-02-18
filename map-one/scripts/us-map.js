@@ -11,6 +11,7 @@ function USMap(params) {
         right: 0,
       },
       data: {},
+      searchData: {},
       geojson: null,
       hideClickTooltip: false,
       container: document.body,
@@ -26,33 +27,88 @@ function USMap(params) {
         "District of Columbia",
       ],
       colors: [],
+      cities: [],
       hideLabels: true,
       onStateMouseOver: () => { },
       onStateMouseOut: () => { },
       onStateClick: () => { },
       tooltipContent: () => { },
+      cityTooltipContent: () => { },
     },
     params
   );
 
 
   var container,
-    svg,
-    chart,
-    chartInner,
-    mapContainer,
-    labelsContainer,
-    stateLabels,
-    stateLabelsClone,
-    stateFeatures,
-    states,
-    chartWidth,
-    chartHeight,
-    path,
-    projection,
-    colorScale,
-    currentSelected = null,
-    zoom = d3.zoom().on("zoom", zoomed);
+  svg,
+  chart,
+  chartInner,
+  mapContainer,
+  labelsContainer,
+  stateLabels,
+  stateLabelsClone,
+  stateFeatures,
+  states,
+  chartWidth,
+  chartHeight,
+  path,
+  projection,
+  colorScale,
+  currentSelected = null,
+  zoom = d3.zoom().scaleExtent([1, 8]).on("zoom", zoomed),
+  stateNameToAbbr = {
+    "Alabama": "AL",
+    "Alaska": "AK",
+    "Arizona": "AZ",
+    "Arkansas": "AR",
+    "California": "CA",
+    "Colorado": "CO",
+    "Connecticut": "CT",
+    "Delaware": "DE",
+    "District of Columbia": "DC",
+    "Florida": "FL",
+    "Georgia": "GA",
+    "Hawaii": "HI",
+    "Idaho": "ID",
+    "Illinois": "IL",
+    "Indiana": "IN",
+    "Iowa": "IA",
+    "Kansas": "KS",
+    "Kentucky": "KY",
+    "Louisiana": "LA",
+    "Maine": "ME",
+    "Maryland": "MD",
+    "Massachusetts": "MA",
+    "Michigan": "MI",
+    "Minnesota": "MN",
+    "Mississippi": "MS",
+    "Missouri": "MO",
+    "Montana": "MT",
+    "Nebraska": "NE",
+    "Nevada": "NV",
+    "New Hampshire": "NH",
+    "New Jersey": "NJ",
+    "New Mexico": "NM",
+    "New York": "NY",
+    "North Carolina": "NC",
+    "North Dakota": "ND",
+    "Ohio": "OH",
+    "Oklahoma": "OK",
+    "Oregon": "OR",
+    "Pennsylvania": "PA",
+    "Rhode Island": "RI",
+    "South Carolina": "SC",
+    "South Dakota": "SD",
+    "Tennessee": "TN",
+    "Texas": "TX",
+    "Utah": "UT",
+    "Vermont": "VT",
+    "Virginia": "VA",
+    "Washington": "WA",
+    "West Virginia": "WV",
+    "Wisconsin": "WI",
+    "Wyoming": "WY"
+  };
 
   function main() {
     if (!attrs.container || !document.querySelector(attrs.container)) {
@@ -82,10 +138,10 @@ function USMap(params) {
       })
       .attr("viewBox", "0 0 975 710")
       .attr("width", attrs.width)
-      .attr("height", attrs.height);
-    // .call(zoom)
-    // .on("wheel.zoom", null)
-    // .on("dblclick.zoom", null);
+      .attr("height", attrs.height)
+      .call(zoom)
+      .on("wheel.zoom", null)
+      .on("dblclick.zoom", null);
 
     //Add chart group
     chart = svg
@@ -130,7 +186,9 @@ function USMap(params) {
       .attr("data-state", d => d.properties.name)
       .classed("highlighted", (d) => d.properties.name === currentSelected)
       .attr("stroke", "#fff")
+      .attr('cursor', 'pointer')
       .attr("stroke-width", 1.5)
+      .attr("cursor", 'pointer')
       .attr("fill", (d, i) => {
         var value = attrs.data[d.properties.name];
 
@@ -160,6 +218,11 @@ function USMap(params) {
       })
       .on("click", function (e, d) {
         highlight(d.properties.name, true);
+        zoomToState(d);
+        if (attrs.cities && attrs.cities.length) {
+          drawCitiesForState(d);
+        }
+        e.stopPropagation();
       });
 
     stateLabels = labelsContainer
@@ -235,6 +298,7 @@ function USMap(params) {
         {
           name: d.properties.name,
           value: attrs.data[d.properties.name],
+          searchValue: attrs.searchData[d.properties.name]
         },
         "mini"
       );
@@ -257,6 +321,7 @@ function USMap(params) {
           {
             name: d.properties.name,
             value: attrs.data[d.properties.name],
+            searchValue: attrs.searchData[d.properties.name]
           },
           "navigation"
         );
@@ -358,6 +423,166 @@ function USMap(params) {
     colorScale = d3.scaleQuantile().domain([min, max]).range(attrs.colors);
   }
 
+  function zoomToState(feature) {
+    if (!feature || !path) return;
+
+    // Get the bounding box of the clicked state in SVG coordinates
+    const bounds = path.bounds(feature);
+    const dx = bounds[1][0] - bounds[0][0];
+    const dy = bounds[1][1] - bounds[0][1];
+    const x = (bounds[0][0] + bounds[1][0]) / 2;
+    const y = (bounds[0][1] + bounds[1][1]) / 2;
+
+    // Compute scale and translation to fit the state nicely
+    const scale = Math.max(
+      1,
+      Math.min(
+        8,
+        0.9 / Math.max(dx / chartWidth, dy / chartHeight)
+      )
+    );
+
+    const translateX = chartWidth / 2 - scale * x;
+    const translateY = chartHeight / 2 - scale * y;
+
+    svg
+      .transition()
+      .duration(750)
+      .call(
+        zoom.transform,
+        d3.zoomIdentity.translate(translateX, translateY).scale(scale)
+      );
+  }
+
+  function drawCityCircles(data) {
+    if (!mapContainer || !projection) return;
+
+    const circles = mapContainer
+      .selectAll(".city-circle")
+      .data(data, d => `${d.CITY}-${d.STATE}`);
+
+    circles.exit().each(function() {
+      if (this._tippy) {
+        this._tippy.destroy();
+      }
+    }).remove();
+
+    const circlesEnter = circles
+      .enter()
+      .append("circle")
+      .attr("class", "city-circle")
+      .attr("r", 4)
+      .attr("stroke", "#fff")
+      .attr("stroke-width", 1);
+
+    circlesEnter.merge(circles)
+      .attr("fill", '#fff')
+      .attr('stroke', '#000')
+      .attr("cx", d => {
+        const lat = +d.LONGITUDE;
+        const lon = -Math.abs(+d.LATITUDE);
+        const coords = projection([lon, lat]);
+        return coords ? coords[0] : null;
+      })
+      .attr("cy", d => {
+        const lat = +d.LONGITUDE;
+        const lon = -Math.abs(+d.LATITUDE);
+        const coords = projection([lon, lat]);
+        return coords ? coords[1] : null;
+      })
+      .attr("opacity", d => {
+        const lat = +d.LONGITUDE;
+        const lon = -Math.abs(+d.LATITUDE);
+        const coords = projection([lon, lat]);
+        return coords ? 1 : 0;
+      });
+
+    // Add tooltips to circles
+    appendCityTooltips(circlesEnter.merge(circles));
+  }
+
+  function appendCityTooltips(circles) {
+    const tooltipOptions = {
+      allowHTML: true,
+      arrow: false,
+      maxWidth: 250,
+      duration: 0,
+      placement: "top",
+      popperOptions: {
+        modifiers: [
+          {
+            name: "computeStyles",
+            options: {
+              gpuAcceleration: false,
+            },
+          },
+        ],
+      },
+      theme: "light",
+      trigger: "mouseenter focus",
+      hideOnClick: false,
+      interactive: false,
+    };
+
+    circles.each(function(d) {
+      if (this._tippy) {
+        this._tippy.destroy();
+      }
+
+      const content = attrs.cityTooltipContent ? 
+        attrs.cityTooltipContent(d) : 
+        getDefaultCityTooltipContent(d);
+
+      if (content) {
+        tippy(this, {
+          ...tooltipOptions,
+          content,
+        });
+      }
+    });
+  }
+
+  function getDefaultCityTooltipContent(city) {
+    if (!city) return '';
+    
+    const overallRank = city['OVERALL RANK'] || '';
+    const searchRank = city['RANK FOR GSV'] || '';
+    const peakMonth = city['MOST SEARCHED MONTH'] || '';
+    const cityName = city.CITY || '';
+
+    // Use ordinal_suffix_of if available globally, otherwise just show the number
+    const formatRank = (typeof ordinal_suffix_of !== 'undefined') ? 
+      (rank) => ordinal_suffix_of(rank) : 
+      (rank) => rank;
+
+    return `
+      <div class='tooltip-content'>
+        <div class="name-and-rank">
+          <div class='name'>${cityName}</div>
+          <div class='rank-value'>#${formatRank(overallRank)}</div>
+        </div>
+        <div class='search-rank'>Search Rank: ${formatRank(searchRank)}</div>
+        <div class='peak-month'>Peak Month: ${peakMonth}</div>
+      </div>
+    `;
+  }
+
+  function drawCitiesForState(feature) {
+    if (!attrs.cities || !attrs.cities.length) return;
+    if (!feature || !feature.properties || !feature.properties.name) return;
+
+    const stateName = feature.properties.name;
+    const abbr = stateNameToAbbr[stateName];
+
+    if (!abbr) {
+      drawCityCircles([]);
+      return;
+    }
+
+    const citiesInState = attrs.cities.filter(city => city.STATE === abbr);
+    drawCityCircles(citiesInState);
+  }
+
   function zoomed(e) {
     var transform = e.transform;
     chartInner.attr("transform", transform);
@@ -387,10 +612,12 @@ function USMap(params) {
   main.colorScale = () => colorScale;
   main.resize = () => main();
 
+  
   main.getDataArr = () => {
     return Object.entries(attrs.data).sort((a, b) => {
       return a[1] - b[1];
     }).map(d => {
+      console.log(d)
       return {
         name: d[0],
         value: d[1]

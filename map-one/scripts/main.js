@@ -5,12 +5,15 @@ function App() {
   let stateMap = null
   let overallMap = null
   let stateData = null
+  let citiesData = null
   let currentZoom = 1
   let zoomDiff = 0.2
 
-  loadData().then(({ geojson, statesData, pestsData }) => {
+  loadData().then(({ geojson, statesData, pestsData, cities }) => {
     mapJson = geojson
     stateData = statesData
+    citiesData = cities
+    console.log(statesData)
 
     function cleanKeys(data) {
       return data.map(obj => {
@@ -61,13 +64,13 @@ function App() {
     })
 
 
-    const topTenStates = stateData.sort((a, b) => a['STATE-RANK'] - b['STATE-RANK'])
+    const topTenStates = stateData.sort((a, b) => a['OVERALL RANKING'])
 
     const headers = [
       {
         label: 'Rank',
         icon: './images/iconss/rank.svg',
-        fieldValue: 'STATE-RANK',
+        fieldValue: 'OVERALL RANKING',
         width: '10%'
       },
       {
@@ -79,7 +82,7 @@ function App() {
       {
         label: 'Search',
         icon: './images/iconss/search.svg',
-        fieldValue: 'RANK FOR GSV',
+        fieldValue: 'RANK FOR SEARCH VOLUME',
         width: '10%'
       },
       {
@@ -91,19 +94,70 @@ function App() {
       {
         label: 'Rainfall',
         icon: './images/iconss/rainfall.svg',
-        fieldValue: 'RANK FOR PRECIPITATION',
+        fieldValue: 'RANK FOR RAINFALL',
         width: '10%'
       },
       {
         label: 'Sunshine',
         icon: './images/iconss/sunshine.svg',
-        fieldValue: 'RANK FOR TEMPERATURE',
+        fieldValue: 'RANK FOR SUNSHINE',
         width: '10%'
       },
       {
         label: 'Housing Age',
         icon: './images/iconss/housingAge.svg',
-        fieldValue: 'RANK FOR YEAR BUILT',
+        fieldValue: 'RANK FOR HOUSING AGE',
+        width: '15%'
+      },
+      {
+        label: 'Population',
+        icon: './images/iconss/population.svg',
+        fieldValue: 'RANK FOR POPULATION DENSITY',
+        width: '10%'
+      }
+    ]
+
+    const cityHeaders = [
+      {
+        label: 'Rank',
+        icon: './images/iconss/rank.svg',
+        fieldValue: 'OVERALL RANKING',
+        width: '10%'
+      },
+      {
+        label: 'City',
+        icon: './images/iconss/state.svg',
+        fieldValue: 'CITY',
+        width: '10%'
+      },
+      {
+        label: 'Search',
+        icon: './images/iconss/search.svg',
+        fieldValue: 'RANK FOR SEARCH VOLUME',
+        width: '10%'
+      },
+      {
+        label: 'Peak Month',
+        icon: './images/iconss/peakMonth.svg',
+        fieldValue: 'MOST SEARCHED MONTH',
+        width: '15%'
+      },
+      {
+        label: 'Rainfall',
+        icon: './images/iconss/rainfall.svg',
+        fieldValue: 'RANK FOR RAINFALL',
+        width: '10%'
+      },
+      {
+        label: 'Sunshine',
+        icon: './images/iconss/sunshine.svg',
+        fieldValue: 'RANK FOR SUNSHINE',
+        width: '10%'
+      },
+      {
+        label: 'Housing Age',
+        icon: './images/iconss/housingAge.svg',
+        fieldValue: 'RANK FOR HOUSING AGE',
         width: '15%'
       },
       {
@@ -136,17 +190,45 @@ function App() {
     ]
 
     const newMapData = stateData.reduce((obj, d) => {
-      obj[d['STATE'].trim()] = d["STATE-RANK"]
+      obj[d['STATE'].trim()] = d["OVERALL RANKING"]
       return obj
     }, {})
 
-    const getTooltipContent = (name, value, target, version) => {
+    const newSearchMapData = stateData.reduce((obj, d) => {
+      obj[d['STATE'].trim()] = d["RANK FOR SEARCH VOLUME"]
+      return obj
+    }, {})
+
+    console.log(newSearchMapData)
+
+    const stateNameToAbbr = {
+      "Alabama": "AL", "Alaska": "AK", "Arizona": "AZ", "Arkansas": "AR",
+      "California": "CA", "Colorado": "CO", "Connecticut": "CT", "Delaware": "DE",
+      "District of Columbia": "DC", "Florida": "FL", "Georgia": "GA", "Hawaii": "HI",
+      "Idaho": "ID", "Illinois": "IL", "Indiana": "IN", "Iowa": "IA",
+      "Kansas": "KS", "Kentucky": "KY", "Louisiana": "LA", "Maine": "ME",
+      "Maryland": "MD", "Massachusetts": "MA", "Michigan": "MI", "Minnesota": "MN",
+      "Mississippi": "MS", "Missouri": "MO", "Montana": "MT", "Nebraska": "NE",
+      "Nevada": "NV", "New Hampshire": "NH", "New Jersey": "NJ", "New Mexico": "NM",
+      "New York": "NY", "North Carolina": "NC", "North Dakota": "ND", "Ohio": "OH",
+      "Oklahoma": "OK", "Oregon": "OR", "Pennsylvania": "PA", "Rhode Island": "RI",
+      "South Carolina": "SC", "South Dakota": "SD", "Tennessee": "TN", "Texas": "TX",
+      "Utah": "UT", "Vermont": "VT", "Virginia": "VA", "Washington": "WA",
+      "West Virginia": "WV", "Wisconsin": "WI", "Wyoming": "WY"
+    }
+
+    const getTooltipContent = (name, value, target, version, searchValue) => {
       if (!value) return
+      const searchRankText = searchValue ? `Search Rank: ${ordinal_suffix_of(searchValue)}` : ''
       const nameAndRank = `
+         <div class='tooltip-content'>
         <div class="name-and-rank">
-       <span class='rank-value'> ${ordinal_suffix_of(value)} </span> ${name}
+          <div class='name'> ${name} </div>
+          <div class='rank-value'> #${ordinal_suffix_of(value)} </div> 
         </div>
-      `
+        ${searchRankText ? `<div class='search-rank'> ${searchRankText} </div>` : ''}
+        </div> 
+        `
 
       if (version === "mini") {
         return nameAndRank
@@ -154,17 +236,72 @@ function App() {
       return
     }
 
-    function initMaps(newMapData) {
+    const getCityTooltipContent = (city) => {
+      if (!city) return '';
+      
+      const overallRank = city['OVERALL RANK'] || '';
+      const searchRank = city['RANK FOR GSV'] || '';
+      const peakMonth = city['MOST SEARCHED MONTH'] || '';
+      const cityName = city.CITY || '';
+
+      return `
+        <div class='tooltip-content'>
+          <div class="name-and-rank">
+            <div class='name'>${cityName}</div>
+            <div class='rank-value'>#${ordinal_suffix_of(overallRank)}</div>
+          </div>
+          <div class='search-rank'>Search Rank: ${ordinal_suffix_of(searchRank)}</div>
+          <div class='peak-month'>Peak Month: ${peakMonth}</div>
+        </div>
+      `;
+    }
+
+    function mapCityToTableFormat(city) {
+      return {
+        'OVERALL RANKING': city['OVERALL RANK'],
+        'CITY': city.CITY,
+        'RANK FOR SEARCH VOLUME': city['RANK FOR GSV'],
+        'MOST SEARCHED MONTH': city['MOST SEARCHED MONTH'],
+        'RANK FOR RAINFALL': city['RANK FOR PRECIPITATION'],
+        'RANK FOR SUNSHINE': city['RANK FOR TEMPERATURE'],
+        'RANK FOR HOUSING AGE': city['RANK FOR YEAR BUILT'],
+        'RANK FOR POPULATION DENSITY': city['RANK FOR POPULATION DENSITY']
+      }
+    }
+
+    function drawCitiesTable(stateName) {
+      const stateAbbrCode = stateNameToAbbr[stateName]
+      if (!stateAbbrCode || !citiesData) return
+
+      const citiesInState = citiesData
+        .filter(city => city.STATE === stateAbbrCode)
+        .map(mapCityToTableFormat)
+        .sort((a, b) => a['OVERALL RANKING'] - b['OVERALL RANKING'])
+
+      if (citiesInState.length > 0) {
+        drawTable(cityHeaders, citiesInState, `Cities in ${stateName}`, '798px')
+      }
+    }
+
+    function initMaps(newMapData, citiesData) {
       overallMap = USMap({
         container: "#overall_map",
         desktopHeight: 450,
         mobileHeight: 200,
         geojson: mapJson,
         data: newMapData,
-        colors: ['#0355A3', '#155199', '#284C8E', '#3A4884', '#4D447A', '#5F3F6F', '#713B65', '#84375B', '#963250', '#A92E46', '#BB2A3C', '#CE2531', '#E02127'],
-        tooltipContent: ({ name, value }, version) => {
-          return getTooltipContent(name, value, 'test', version)
+        searchData: newSearchMapData,
+        cities: citiesData,
+        colors: ['#E02127', '#CE2531', '#BB2A3C', '#A92E46', '#963250', '#84375B', '#713B65', '#5F3F6F', '#4D447A', '#3A4884', '#284C8E', '#155199', '#0355A3'],
+        tooltipContent: ({ name, value, searchValue }, version) => {
+          return getTooltipContent(name, value, 'test', version, searchValue)
         },
+        cityTooltipContent: (city) => {
+          return getCityTooltipContent(city)
+        },
+        onStateClick: (stateName) => {
+          drawCitiesTable(stateName)
+        }
       }).render()
 
     }
@@ -187,12 +324,13 @@ function App() {
         if (state !== 'Select State') {
           const specificPathNode = d3.select(`path[data-state='${state}']`).node()
           const foundStateObject = stateData.find((d) => d['STATE'].trim() === state)
-          const foundRank = foundStateObject['STATE-RANK']
+          const foundRank = foundStateObject['OVERALL RANKING']
+          const foundSearchRank = foundStateObject['RANK FOR SEARCH VOLUME']
           const foundState = foundStateObject['STATE']
           const version = "mini"
           if (specificPathNode) {
             tippy(specificPathNode, {
-              content: getTooltipContent(foundState, foundRank, 'test', version),
+              content: getTooltipContent(foundState, foundRank, 'test', version, foundSearchRank),
               allowHTML: true,
               arrow: true,
               theme: 'light',
@@ -229,17 +367,18 @@ function App() {
 
 
     drawTable(headers, topTenStates, 'Top ranking States for pest infestation', '798px')
-    initMaps(newMapData)
+    initMaps(newMapData, citiesData)
     addEvents()
   })
 
   function loadData() {
     return Promise.all([
       d3.json("./data/map.json"),
-      d3.csv('./data/alldata-new.csv', d3.autoType),
-      d3.csv('./data/Pest-by-states.csv', d3.autoType)
-    ]).then(([geojson, statesData, pestsData]) => {
-      return { geojson, statesData, pestsData }
+      d3.csv('./data/alldata-statess.csv', d3.autoType),
+      d3.csv('./data/Pest-by-states.csv', d3.autoType),
+      d3.csv('./data/alldata-new.csv', d3.autoType)
+    ]).then(([geojson, statesData, pestsData, cities]) => {
+      return { geojson, statesData, pestsData, cities }
     })
   }
 
@@ -249,6 +388,7 @@ function App() {
       stateMap.resize()
     })
   }
+
 
   function drawTable(headers, data, title, width) {
     d3.select('.table-box').style('width', window.innerWidth < 576 ? '100%' : width)
@@ -283,7 +423,7 @@ function App() {
       })
       .join('td')
       .text((d, index) => {
-        return index === 0 ? ordinal_suffix_of(d) : d
+        return index === 1 || index === 3 ? d : ordinal_suffix_of(d)
       })
   }
 

@@ -48,17 +48,48 @@ body {
   background: transparent;
 }
 
-.tippy-box .name-and-rank {
+.tippy-box .tooltip-content {
   background-color: white;
   border: 2px solid black;
-  padding: 10px 12px;
-  min-width: 150px;
+  padding: 5px;
+}
+
+.tippy-box .name-and-rank {
   font-family: Open Sans Condensed;
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 700;
   line-height: 26px;
   text-align: left;
-  color: #051C34
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: var(--red);
+}
+
+.tippy-box .search-rank {
+  font-family: Open Sans Condensed;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--dark-blue);
+  line-height: 18px;
+  text-align: left;
+  /* margin-top: 4px; */
+  padding-top: 4px;
+}
+
+.tippy-box .peak-month {
+  font-family: Open Sans Condensed;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--dark-blue);
+  line-height: 18px;
+  text-align: left;
+  padding-top: 4px;
+}
+
+.tippy-box .tooltip-content {
+  text-transform: uppercase;
 }
 
 
@@ -70,16 +101,11 @@ body {
 
 .tippy-box .name-and-rank .name {
   font-weight: 700;
-  font-size: 16px;
-  line-height: 22px;
-  color: #060633;
+  text-transform: uppercase;
 }
 
-.tippy-box .name-and-rank .rank {
+.tippy-box .name-and-rank .rank-value {
   font-weight: 400;
-  font-size: 13.33px;
-  line-height: 18px;
-  color: var(--dark-blue)
 }
 
 .map-tooltip {
@@ -693,6 +719,8 @@ tr td:first-child {
     width: 100% !important;
     margin: 0 auto;
     text-transform: uppercase;
+    height: 550px;
+    overflow-y: auto;
   }
 
   .table-div {
