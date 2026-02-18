@@ -280,7 +280,7 @@ function App() {
         .sort((a, b) => a['OVERALL RANKING'] - b['OVERALL RANKING'])
 
       if (citiesInState.length > 0) {
-        drawTable(cityHeaders, citiesInState, `Cities in ${stateName}`, '798px')
+        drawTable(cityHeaders, citiesInState, `Top Ranking ${stateName} cities` , '798px')
       }
     }
 
