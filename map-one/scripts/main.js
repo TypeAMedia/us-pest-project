@@ -1,13 +1,14 @@
 function App() {
-
-  const scaleExtent = [0.5, 15]
   let mapJson = null
   let stateMap = null
   let overallMap = null
   let stateData = null
   let citiesData = null
+
   let currentZoom = 1
   let zoomDiff = 0.2
+  const scaleExtent = [0.5, 15]
+
 
   loadData().then(({ geojson, statesData, pestsData, cities }) => {
     mapJson = geojson
@@ -416,6 +417,8 @@ function App() {
       .join('tr')
       .attr('class', 'table-body-row')
 
+
+
     const tableCells = tableRows
       .selectAll('td')
       .data((d) => {
@@ -435,12 +438,9 @@ function App() {
   })
 
   d3.select("#zoom_out").on('click', () => {
-    if (currentZoom - zoomDiff >= scaleExtent[0]) {
-      currentZoom = currentZoom - zoomDiff
-    }
-    overallMap.zoom(currentZoom)
+    currentZoom = 1
+    overallMap.resetZoom()
   })
-
 
 }
 

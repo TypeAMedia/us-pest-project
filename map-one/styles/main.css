@@ -274,10 +274,10 @@ header .titles {
 /* End of category slider */
 
 /* overall map */
-
+/* 
 .state.highlighted {
   fill: #051C34;
-}
+} */
 
 .overall-map {
   padding: 0px;
@@ -777,4 +777,8 @@ tr td:first-child {
     max-width: 461px;
     justify-content: space-between;
   }
+}
+
+.city-circle:focus {
+  outline: none;
 }

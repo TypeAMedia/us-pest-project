@@ -55,6 +55,7 @@ function USMap(params) {
   projection,
   colorScale,
   currentSelected = null,
+  circlesShown = false,
   zoom = d3.zoom().scaleExtent([1, 8]).on("zoom", zoomed),
   stateNameToAbbr = {
     "Alabama": "AL",
@@ -217,10 +218,24 @@ function USMap(params) {
         }
       })
       .on("click", function (e, d) {
-        highlight(d.properties.name, true);
-        zoomToState(d);
-        if (attrs.cities && attrs.cities.length) {
-          drawCitiesForState(d);
+        const clickedStateName = d.properties.name;
+        
+        // If clicking the same state that's already selected, hide circles and reset
+        if (currentSelected === clickedStateName && circlesShown) {
+          // Hide circles and reset zoom to identity
+          drawCityCircles([]);
+          circlesShown = false;
+          currentSelected = null;
+          highlight(null);
+          resetZoom();
+        } else {
+          // Show circles for the clicked state
+          highlight(clickedStateName, true);
+          zoomToState(d);
+          if (attrs.cities && attrs.cities.length) {
+            drawCitiesForState(d);
+            circlesShown = true;
+          }
         }
         e.stopPropagation();
       });
@@ -361,7 +376,14 @@ function USMap(params) {
         this._tippy && this._tippy.hide();
       });
 
-      attrs.onStateClick(stateName);
+      if (stateName) {
+        attrs.onStateClick(stateName);
+      }
+    }
+
+    // Clear currentSelected if stateName is null
+    if (!stateName) {
+      currentSelected = null;
     }
 
     if (stateName) {
@@ -588,8 +610,16 @@ function USMap(params) {
     chartInner.attr("transform", transform);
   }
 
+
+
+
   function resetZoom() {
     svg.transition().duration(750).call(zoom.transform, d3.zoomIdentity);
+    // Hide circles and reset selection when zoom is reset
+    drawCityCircles([]);
+    circlesShown = false;
+    currentSelected = null;
+    highlight(null);
   }
 
   function scaleOnly(scale) {
@@ -640,4 +670,5 @@ function USMap(params) {
   };
 
   return main;
+  
 }
