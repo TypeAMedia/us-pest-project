@@ -609,6 +609,13 @@ function USMap(params) {
   function zoomed(e) {
     var transform = e.transform;
     chartInner.attr("transform", transform);
+
+    // Adjust city circle sizes so they appear smaller when zoomed in
+    var k = transform.k || 1;
+    mapContainer
+      .selectAll(".city-circle")
+      .attr("r", 10 / k)
+      .attr("stroke-width", 1 / k);
   }
 
 
