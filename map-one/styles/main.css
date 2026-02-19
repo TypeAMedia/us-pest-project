@@ -414,6 +414,8 @@ header .titles {
   width: 100%;
   margin: 0 auto;
   text-transform: uppercase;
+  height: 550px;
+  overflow-y: auto;
 }
 
 .table-row {

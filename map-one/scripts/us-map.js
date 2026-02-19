@@ -494,7 +494,7 @@ function USMap(params) {
       .enter()
       .append("circle")
       .attr("class", "city-circle")
-      .attr("r", 4)
+      .attr("r", 7)
       .attr("stroke", "#fff")
       .attr("stroke-width", 1);
 
