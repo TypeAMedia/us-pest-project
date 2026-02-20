@@ -604,6 +604,10 @@ tr td:first-child {
   display: none;
 }
 
+.choices__list--dropdown .choices__item[data-value='Select State'] {
+  display: none;
+}
+
 .choices__list--dropdown .choices__item.is-selected {
   background-color: var(--red);
   color: #ffffff;

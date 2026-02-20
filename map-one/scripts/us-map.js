@@ -618,9 +618,6 @@ function USMap(params) {
       .attr("stroke-width", 1 / k);
   }
 
-
-
-
   function resetZoom() {
     svg.transition().duration(750).call(zoom.transform, d3.zoomIdentity);
     // Hide circles and reset selection when zoom is reset
