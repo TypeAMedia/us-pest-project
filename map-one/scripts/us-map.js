@@ -478,6 +478,7 @@ function USMap(params) {
   }
 
   function drawCityCircles(data) {
+    console.log(data)
     if (!mapContainer || !projection) return;
 
     const circles = mapContainer
@@ -591,6 +592,7 @@ function USMap(params) {
   }
 
   function drawCitiesForState(feature) {
+    console.log(feature)
     if (!attrs.cities || !attrs.cities.length) return;
     if (!feature || !feature.properties || !feature.properties.name) return;
 
@@ -648,6 +650,7 @@ function USMap(params) {
   main.highlight = highlight;
   main.colorScale = () => colorScale;
   main.resize = () => main();
+
 
   
   main.getDataArr = () => {

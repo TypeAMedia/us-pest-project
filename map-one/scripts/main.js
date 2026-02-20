@@ -14,7 +14,7 @@ function App() {
     mapJson = geojson
     stateData = statesData
     citiesData = cities
-    console.log(statesData)
+ 
 
     function cleanKeys(data) {
       return data.map(obj => {
@@ -206,7 +206,6 @@ function App() {
       return obj
     }, {})
 
-    console.log(newSearchMapData)
 
     const stateNameToAbbr = {
       "Alabama": "AL", "Alaska": "AK", "Arizona": "AZ", "Arkansas": "AR",
@@ -277,6 +276,7 @@ function App() {
     }
 
     function drawCitiesTable(stateName) {
+      // console.log(stateName)
       const stateAbbrCode = stateNameToAbbr[stateName]
       if (!stateAbbrCode || !citiesData) return
 
@@ -351,21 +351,24 @@ function App() {
           } else {
             console.error(`Path node for county '${state}' not found.`)
           }
+      
+          drawCitiesTable(foundStateObject.STATE)
+
           // redraw table
-          const chosenStatePests = newPestsData.filter((d) => d.Keyword !== "Total search volume").slice()
-            .sort((a, b) => {
-              return b[state] - a[state]
-            }
-            )
-            .slice(0, 10).map((d, index) => {
-              return {
-                'STATE': state,
-                Ranking: index + 1,
-                'Total number of pest-related search queries': d[state],
-                pest: d.Keyword
-              }
-            })
-          drawTable(stateTableHeader, chosenStatePests, `Top 10 most common pest searches in ${state}`, '400px')
+          // const chosenStatePests = newPestsData.filter((d) => d.Keyword !== "Total search volume").slice()
+          //   .sort((a, b) => {
+          //     return b[state] - a[state]
+          //   }
+          //   )
+          //   .slice(0, 10).map((d, index) => {
+          //     return {
+          //       'STATE': state,
+          //       Ranking: index + 1,
+          //       'Total number of pest-related search queries': d[state],
+          //       pest: d.Keyword
+          //     }
+          //   })
+          // drawTable(stateTableHeader, chosenStatePests, `Top 10 most common pest searches in ${state}`, '400px')
         }
 
         if (state === 'Select State') {
@@ -428,7 +431,7 @@ function App() {
 
 
 
-    const tableCells = tableRows
+    tableRows
       .selectAll('td')
       .data((d) => {
         return headers.map((header) => d[header.fieldValue])
