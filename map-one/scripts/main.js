@@ -4,6 +4,7 @@ function App() {
   let overallMap = null
   let stateData = null
   let citiesData = null
+  let stateDropdownChoice = null
 
   let currentZoom = 1
   let zoomDiff = 0.2
@@ -316,7 +317,7 @@ function App() {
 
     }
 
-    initDropdown({
+    stateDropdownChoice = initDropdown({
       list: states,
       id: "#categories_select",
       // placeholder: `<div class='choice-label'>
@@ -332,14 +333,31 @@ function App() {
       cb: (state) => {
         // show tooltip
         if (state !== 'Select State') {
-          const specificPathNode = d3.select(`path[data-state='${state}']`).node()
+          if (overallMap && typeof overallMap.selectState === 'function') {
+            currentZoom = overallMap.selectState(state) || 1
+          }
+
           const foundStateObject = stateData.find((d) => d['STATE'].trim() === state)
           const foundRank = foundStateObject['OVERALL RANKING']
           const foundSearchRank = foundStateObject['RANK FOR SEARCH VOLUME']
           const foundState = foundStateObject['STATE']
           const version = "mini"
-          if (specificPathNode) {
-            tippy(specificPathNode, {
+          
+          // Delay showing tooltip until zoom transition has finished,
+          // so the tooltip is positioned on the zoomed-in state.
+          setTimeout(() => {
+            const specificPathNode = d3.select(`path[data-state='${state}']`).node()
+            if (!specificPathNode) {
+              console.error(`Path node for county '${state}' not found.`)
+              return
+            }
+
+            if (specificPathNode._dropdownTippy) {
+              specificPathNode._dropdownTippy.destroy()
+              specificPathNode._dropdownTippy = null
+            }
+
+            const instance = tippy(specificPathNode, {
               content: getTooltipContent(foundState, foundRank, 'test', version, foundSearchRank),
               allowHTML: true,
               arrow: true,
@@ -347,12 +365,11 @@ function App() {
               animation: 'scale',
               placement: 'top',
               trigger: 'manual'
-            }).show()
-          } else {
-            console.error(`Path node for county '${state}' not found.`)
-          }
-      
-          drawCitiesTable(foundStateObject.STATE)
+            })
+
+            instance.show()
+            specificPathNode._dropdownTippy = instance
+          }, 800)
 
           // redraw table
           // const chosenStatePests = newPestsData.filter((d) => d.Keyword !== "Total search volume").slice()
@@ -372,7 +389,12 @@ function App() {
         }
 
         if (state === 'Select State') {
-          drawTable(headers, topTenStates, 'Top 10 States most affected by pest infestations', '798px')
+          currentZoom = 1
+          if (overallMap && typeof overallMap.resetZoom === 'function') {
+            overallMap.resetZoom()
+          } else {
+            drawTable(headers, topTenStates, 'Top 10 States most affected by pest infestations', '798px')
+          }
         }
 
       }
@@ -451,7 +473,22 @@ function App() {
 
   d3.select("#zoom_out").on('click', () => {
     currentZoom = 1
-    overallMap.resetZoom()
+    if (overallMap && typeof overallMap.resetZoom === 'function') {
+      overallMap.resetZoom()
+    }
+
+    // Reset dropdown selection back to "Select State"
+    if (stateDropdownChoice && typeof stateDropdownChoice.setChoiceByValue === 'function') {
+      stateDropdownChoice.setChoiceByValue('Select State')
+    } else {
+      const selectEl = document.querySelector('#categories_select')
+      if (selectEl) {
+        selectEl.value = 'Select State'
+        if (typeof triggerEvent === 'function') {
+          triggerEvent(selectEl, 'change')
+        }
+      }
+    }
   })
 
 }
