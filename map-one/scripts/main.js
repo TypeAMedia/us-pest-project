@@ -93,12 +93,12 @@ function App() {
         fieldValue: 'RANK FOR SEARCH VOLUME',
         width: '10%'
       },
-      {
-        label: 'Peak Month',
-        icon: './images/iconss/peakMonth.svg',
-        fieldValue: 'MOST SEARCHED MONTH',
-        width: '15%'
-      },
+      // {
+      //   label: 'Peak Month',
+      //   icon: './images/iconss/peakMonth.svg',
+      //   fieldValue: 'MOST SEARCHED MONTH',
+      //   width: '15%'
+      // },
       {
         label: 'Rainfall',
         icon: './images/iconss/rainfall.svg',
